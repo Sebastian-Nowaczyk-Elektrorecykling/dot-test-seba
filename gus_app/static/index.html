@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#153c38">
+  <meta name="description" content="Wyszukuj zmienne, miejsca i dane statystyczne z Banku Danych Lokalnych GUS. Czytelne wyniki i wszystkie filtry publicznego API BDL.">
+  <title>BDL Explorer · Dane GUS w zasięgu ręki</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#explorer">Przejdź do wyszukiwarki</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="BDL Explorer — strona główna">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span>BDL<span class="brand-light"> explorer</span></span>
+      </a>
+      <div class="header-right"><span class="source-badge"><span class="status-dot"></span> Publiczne dane GUS</span><a href="https://api.stat.gov.pl/Home/BdlApi" target="_blank" rel="noopener noreferrer" class="documentation-link">Dokumentacja <span aria-hidden="true">↗</span></a></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero shell" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-line" aria-hidden="true"></span> BANK DANYCH LOKALNYCH</p>
+        <h1 id="hero-title">Polska w danych.<br><span>Twoje pytania, liczby GUS.</span></h1>
+        <p class="hero-description">Znajdź wskaźnik, wybierz miejsce i przyjrzyj się liczbom.<br class="desktop-break"> Odkrywaj dane BDL bez pisania zapytań do API.</p>
+        <div class="example-row" aria-label="Przykładowe wyszukiwania"><span>Sprawdź na przykład</span><button type="button" data-example="population" disabled>Ludność <span aria-hidden="true">↗</span></button><button type="button" data-example="unemployment" disabled>Bezrobocie <span aria-hidden="true">↗</span></button><button type="button" data-example="warsaw" disabled>Warszawa <span aria-hidden="true">↗</span></button></div>
+      </div>
+      <aside class="hero-note" aria-label="Jak zacząć">
+        <span class="note-icon" aria-hidden="true">↗</span>
+        <p class="note-heading">Od pytania do danych</p>
+        <ol><li><span>01</span> Znajdź zmienną lub miejscowość</li><li><span>02</span> Przejdź do jej danych</li><li><span>03</span> Zawęź wyniki filtrami</li></ol>
+        <p class="scope-note">Zakres: publiczne API BDL GUS.<br>Wyszukiwarka nie obejmuje rejestru REGON ani innych API GUS.</p>
+      </aside>
+    </section>
+
+    <section class="workspace shell" id="explorer" aria-label="Wyszukiwarka danych BDL">
+      <aside class="search-panel">
+        <div class="panel-heading"><span class="section-number">01</span><h2>Wybierz dane</h2></div>
+        <div class="quick-modes" role="group" aria-label="Szybki wybór zasobu"><button type="button" data-mode="variables" aria-pressed="false" disabled>Zmienne</button><button type="button" data-mode="units" aria-pressed="false" disabled>Miejsca</button><button type="button" data-mode="data" aria-pressed="false" disabled>Dane</button></div>
+        <form id="query-form">
+          <div class="field endpoint-field"><label for="endpoint">Zasób API</label><select id="endpoint" name="endpoint" disabled aria-describedby="endpoint-description"><option>Wczytywanie katalogu…</option></select><p id="endpoint-description" class="field-hint">Pobieramy dostępne zasoby i filtry.</p><span id="endpoint-path" class="endpoint-path" hidden></span></div>
+          <div class="filter-heading"><h3>Filtry zapytania</h3><span id="parameter-count"></span></div>
+          <div id="parameters"></div>
+          <div class="form-actions"><button class="button button-primary" id="search-button" type="submit" disabled><span aria-hidden="true">⌕</span> Pobierz dane</button><button class="button button-quiet" id="clear-button" type="button" disabled>Wyczyść filtry</button></div>
+          <p class="form-footnote">Puste filtry są pomijane. Pola oznaczone * są wymagane.</p>
+        </form>
+      </aside>
+
+      <section class="results-panel" aria-labelledby="results-title" aria-busy="false" id="results-panel">
+        <div class="results-heading"><div><p class="eyebrow compact">ODPOWIEDŹ Z BDL</p><h2 id="results-title" tabindex="-1">Twoje wyniki</h2></div><span id="result-badge" class="result-badge">Gotowe na pytanie</span></div>
+        <p id="live-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+        <div id="request-note" class="request-note" hidden></div>
+        <div id="error-box" class="error-box" role="alert" hidden><div><h3 id="error-title">Nie udało się pobrać danych</h3><p id="error-message"></p></div><button type="button" id="retry-button" class="button button-outline">Spróbuj ponownie</button></div>
+        <div id="loading-state" class="loading-state" hidden><span class="spinner" aria-hidden="true"></span><h3>Sprawdzamy dane w GUS</h3><p>Odpowiedź publicznego API może zająć chwilę.</p><button type="button" id="cancel-button" class="button button-quiet">Anuluj zapytanie</button></div>
+        <div id="empty-state" class="empty-state">
+          <div class="empty-illustration" aria-hidden="true"><div class="illustration-grid"></div><span class="illustration-bar bar-one"></span><span class="illustration-bar bar-two"></span><span class="illustration-bar bar-three"></span><span class="illustration-bar bar-four"></span><span class="illustration-dot"></span></div>
+          <h3>Każda liczba ma swoją historię.</h3>
+          <p>Wpisz temat po lewej lub wybierz przykład powyżej.<br>Wyniki pojawią się tutaj jako czytelne tabele.</p>
+          <div class="empty-tags"><span>Gospodarka</span><span>Społeczeństwo</span><span>Środowisko</span></div>
+        </div>
+        <div id="no-results" class="no-results" hidden><h3>Brak wyników dla tych filtrów</h3><p>Spróbuj krótszego hasła, innego roku lub usuń część filtrów. Pełna odpowiedź BDL jest dostępna poniżej.</p></div>
+        <div id="results-content"></div>
+        <nav id="pagination" class="pagination" aria-label="Strony wyników" hidden><button type="button" id="previous-page" class="button button-outline">← Poprzednia</button><span id="page-label"></span><button type="button" id="next-page" class="button button-outline">Następna →</button></nav>
+        <div id="source-footer" class="source-footer" hidden><span><span class="status-dot"></span> Dane z publicznego API BDL GUS</span><a id="source-link" href="https://bdl.stat.gov.pl/api/v1" target="_blank" rel="noopener noreferrer">Otwórz odpowiedź źródłową <span aria-hidden="true">↗</span></a></div>
+      </section>
+    </section>
+
+    <section class="info-strip shell" aria-label="Wskazówki"><div><span aria-hidden="true">i</span><p><strong>Najpierw zmienna, potem dane.</strong> Przy znalezionym wskaźniku wybierz „Zobacz dane”. Dla miejsca wskaż też identyfikatory zmiennych.</p></div><p>Wyniki zawierają wszystkie pola odpowiedzi, także zagnieżdżone wartości i metadane. Rozwiń szczegóły, aby je zobaczyć.</p></section>
+  </main>
+  <footer class="site-footer shell"><span>BDL explorer <span class="footer-divider">/</span> Odkrywaj, porównuj, rozumiej.</span><span>Niezależny interfejs do publicznych danych GUS.</span></footer>
+  <noscript><p class="noscript">Włącz JavaScript, aby wybrać filtry i pobrać dane z BDL.</p></noscript>
+</body>
+</html>

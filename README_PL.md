@@ -1,6 +1,14 @@
+# Aplikacja: wyszukiwarka GUS BDL
+
+Nowa aplikacja pozwala przeszukiwać publiczne dane Banku Danych Lokalnych i przeglądać wyniki w polskim interfejsie. Uruchom: `python3 -m gus_app.server`, następnie otwórz http://127.0.0.1:8080.
+
+[Instrukcja, zakres API, bezpieczeństwo i testy](docs/GUS_BDL_PL.md). Testy aplikacji: `bash scripts/project-ci.sh` (Python 3.12+, Node.js). Aplikacja nie wymaga pakietów zewnętrznych ani klucza API.
+
+---
+
 # GitHub + Codex: wydania na portach
 
-Referencyjny proces dla jednego prywatnego repozytorium, hosta Linux x86-64 i pojedynczej aplikacji HTTP w kontenerze. **Nie jest to gotowe wdrożenie dowolnej aplikacji.** Flagi gotowości są wyłączone, a testy aplikacji celowo wymagają konfiguracji.
+Referencyjny proces dla jednego prywatnego repozytorium, hosta Linux x86-64 i pojedynczej aplikacji HTTP w kontenerze. **Nie jest to gotowe wdrożenie dowolnej aplikacji.** Flagi gotowości wdrożenia pozostają wyłączone. Testy aplikacji BDL są skonfigurowane; środowisko wdrożeniowe nadal wymaga osobnej adaptacji.
 
 ## Zacznij tutaj
 
@@ -25,7 +33,7 @@ Referencyjny proces dla jednego prywatnego repozytorium, hosta Linux x86-64 i po
 python3 -m unittest discover -s tests -v
 ```
 
-To testy kontrolera z atrapami i demonstracji, nie Waszej aplikacji. `scripts/project-ci.sh` należy zastąpić rzeczywistymi testami projektu, nie `exit 0`.
+Polecenie obejmuje testy kontrolera, demonstracji i nowej aplikacji BDL. `scripts/project-ci.sh` dodatkowo sprawdza składnię aplikacji; nie jest pustym potwierdzeniem sukcesu.
 
 ## Granice bezpieczeństwa
 

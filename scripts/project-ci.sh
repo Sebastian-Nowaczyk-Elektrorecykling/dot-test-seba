@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Replace with REAL application tests: locked dependency install, lint, unit and integration tests.
-# Never change this to `exit 0` just to unlock a release.
-echo 'APPLICATION_NOT_CONFIGURED: implement scripts/project-ci.sh for this repository.' >&2
-exit 1
+cd "$(dirname "$0")/.."
+# Aplikacja używa wyłącznie biblioteki standardowej Python 3.12+ i JavaScript.
+# Brak instalacji zależności: nie ma nieprzypiętych pakietów pobieranych w CI.
+python3 -m compileall -q gus_app
+node --check gus_app/static/app.js
+node tests/test_gus_ui.cjs
+python3 -m unittest discover -s tests -v
