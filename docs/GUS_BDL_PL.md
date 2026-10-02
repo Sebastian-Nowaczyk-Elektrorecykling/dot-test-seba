@@ -21,7 +21,7 @@ Wymagany Python 3.12 lub nowszy. Aplikacja nie ma zewnętrznych zależności Pyt
 python3 -m gus_app.server
 ```
 
-Otwórz http://127.0.0.1:8080. Domyślny nasłuch tylko na lokalnym interfejsie. `HOST` i `PORT` konfigurują nasłuch. Uruchomienie na publicznym interfejsie wymaga własnego reverse proxy, TLS, kontroli dostępu i limitów ruchu. Nie jest to zgoda ani przygotowanie operacyjne wdrożenia na slot. Nie dodano obrazu kontenera i nie zmieniono flag gotowości.
+Otwórz http://127.0.0.1:8080. Domyślny nasłuch tylko na lokalnym interfejsie. `HOST` i `PORT` konfigurują nasłuch. Uruchomienie na publicznym interfejsie wymaga własnego reverse proxy, TLS, kontroli dostępu i limitów ruchu. Przygotowano deklarację obrazu kontenera zgodną z adapterem; nie zbudowano ani nie wdrożono obrazu. Flagi gotowości pozostają wyłączone. Stan i warunki publikacji: [port 4103](GUS_PORT_4103_PL.md).
 
 ## Jak korzystać
 

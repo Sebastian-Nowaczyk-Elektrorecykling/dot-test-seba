@@ -1,0 +1,9 @@
+# Allowlist the complete application and build definition only.
+**
+!Dockerfile
+!gus_app/
+!gus_app/**
+**/__pycache__/
+**/*.py[cod]
+**/.env
+**/.env.*
