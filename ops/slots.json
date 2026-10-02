@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "repository": "CHANGE_ME/CHANGE_ME",
+  "operators": ["CHANGE_ME"],
+  "application_ready": false,
+  "slots": {
+    "deploy/p4101": {"port": 4101, "environment": "p4101", "purpose": "demo"},
+    "deploy/p4102": {"port": 4102, "environment": "p4102", "purpose": "acceptance"},
+    "deploy/p4103": {"port": 4103, "environment": "p4103", "purpose": "pilot"}
+  }
+}

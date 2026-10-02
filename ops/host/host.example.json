@@ -1,0 +1,29 @@
+{
+  "configured": false,
+  "repository": "CHANGE_ME/CHANGE_ME",
+  "operators": ["CHANGE_ME"],
+  "state_dir": "/srv/port-releases/state",
+  "slots": {
+    "deploy/p4101": {
+      "port": 4101, "environment": "p4101", "url": "http://127.0.0.1:4101",
+      "bind_address": "127.0.0.1", "health_address": "127.0.0.1",
+      "network": "portapp-p4101", "env_file": "/etc/port-releases/p4101.env",
+      "cpus": 1, "memory": "512m", "config_revision": "c1", "data_epoch": "demo-1",
+      "health_timeout_seconds": 60
+    },
+    "deploy/p4102": {
+      "port": 4102, "environment": "p4102", "url": "http://127.0.0.1:4102",
+      "bind_address": "127.0.0.1", "health_address": "127.0.0.1",
+      "network": "portapp-p4102", "env_file": "/etc/port-releases/p4102.env",
+      "cpus": 1, "memory": "512m", "config_revision": "c1", "data_epoch": "acceptance-1",
+      "health_timeout_seconds": 60
+    },
+    "deploy/p4103": {
+      "port": 4103, "environment": "p4103", "url": "http://127.0.0.1:4103",
+      "bind_address": "127.0.0.1", "health_address": "127.0.0.1",
+      "network": "portapp-p4103", "env_file": "/etc/port-releases/p4103.env",
+      "cpus": 1, "memory": "512m", "config_revision": "c1", "data_epoch": "pilot-1",
+      "health_timeout_seconds": 60
+    }
+  }
+}

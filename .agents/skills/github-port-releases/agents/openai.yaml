@@ -1,0 +1,5 @@
+interface:
+  display_name: "GitHub: wydania na portach"
+  short_description: "Kontrolowane wydania, promocje i rollback slotów portowych."
+  default_prompt: "Zastosuj github-port-releases. Odczytaj zasady i aktualny stan. Przygotuj plan lub PR; nie zmieniaj runtime bez zgody na konkretną operację."
+

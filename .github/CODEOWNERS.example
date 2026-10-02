@@ -1,0 +1,9 @@
+# Replace @YOUR_ORG/release-admins with a real team or user before naming this CODEOWNERS.
+/.github/workflows/ @YOUR_ORG/release-admins
+/ops/ @YOUR_ORG/release-admins
+/scripts/project-ci.sh @YOUR_ORG/release-admins
+/AGENTS.md @YOUR_ORG/release-admins
+/.agents/ @YOUR_ORG/release-admins
+/Dockerfile @YOUR_ORG/release-admins
+/.dockerignore @YOUR_ORG/release-admins
+/tests/ @YOUR_ORG/release-admins

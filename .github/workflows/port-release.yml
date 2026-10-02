@@ -1,0 +1,169 @@
+name: Port release (manual)
+run-name: "${{ inputs.operation }} | ${{ inputs.slot_branch }} | ${{ inputs.target_sha || 'runtime-state' }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Operacja (status nie zmienia uruchomionej aplikacji)"
+        type: choice
+        required: true
+        default: status
+        options: [status, deploy, promote, rollback, stop]
+      slot_branch:
+        description: "Docelowa gałąź slotu; jej nazwa wskazuje port"
+        type: choice
+        required: true
+        options: [deploy/p4101, deploy/p4102, deploy/p4103]
+      target_sha:
+        description: "deploy/promote: pełny 40-znakowy SHA końca gałęzi docelowej"
+        type: string
+        required: false
+      expected_generation:
+        description: "Zmiana runtime: generation ze świeżego status (0 dla pustego slotu)"
+        type: string
+        required: false
+      promote_from:
+        description: "promote: slot źródłowy z zaakceptowanym obrazem"
+        type: choice
+        default: none
+        options: [none, deploy/p4101, deploy/p4102, deploy/p4103]
+      source_deployment_id:
+        description: "promote: dokładny aktywny deployment_id ze status źródła"
+        type: string
+        required: false
+      confirm:
+        description: "Zmiana runtime: powtórz cel, np. deploy/p4101"
+        type: string
+        required: false
+      reason:
+        description: "Zmiana runtime: numer decyzji/incydentu i przyczyna; BEZ SEKRETÓW"
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+# Default GitHub concurrency has one pending run; it is not a release queue.
+# Never automatically cancel an in-progress deployment.
+concurrency:
+  group: port-release-${{ inputs.slot_branch }}
+  cancel-in-progress: false
+
+env:
+  PORTCTL_OPERATION: ${{ inputs.operation }}
+  PORTCTL_SLOT_BRANCH: ${{ inputs.slot_branch }}
+  PORTCTL_TARGET_SHA: ${{ inputs.target_sha }}
+  PORTCTL_EXPECTED_GENERATION: ${{ inputs.expected_generation }}
+  PORTCTL_PROMOTE_FROM: ${{ inputs.promote_from }}
+  PORTCTL_SOURCE_DEPLOYMENT_ID: ${{ inputs.source_deployment_id }}
+  PORTCTL_CONFIRM: ${{ inputs.confirm }}
+  PORTCTL_REASON: ${{ inputs.reason }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      port: ${{ steps.plan.outputs.port }}
+      target_sha: ${{ steps.plan.outputs.target_sha }}
+      tree_sha: ${{ steps.plan.outputs.tree_sha }}
+      image_repository: ${{ steps.plan.outputs.image_repository }}
+    steps:
+      - name: Refuse non-main control workflows
+        env:
+          CONTROL_REF: ${{ github.ref }}
+        run: test "$CONTROL_REF" = refs/heads/main
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Validate target and operator
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 ops/plan.py
+
+  application-tests:
+    if: inputs.operation == 'deploy'
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ needs.plan.outputs.target_sha }}
+          persist-credentials: false
+      - name: Test the exact candidate (never on the deployment host)
+        run: bash scripts/project-ci.sh
+
+  build:
+    if: inputs.operation == 'deploy'
+    needs: [plan, application-tests]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ needs.plan.outputs.target_sha }}
+          persist-credentials: false
+      - name: Build and publish immutable image
+        id: image
+        env:
+          PACKAGE_TOKEN: ${{ github.token }}
+          REGISTRY_USER: ${{ github.actor }}
+          IMAGE_REPOSITORY: ${{ needs.plan.outputs.image_repository }}
+          BUILD_SHA: ${{ needs.plan.outputs.target_sha }}
+          TREE_SHA: ${{ needs.plan.outputs.tree_sha }}
+          SOURCE_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${IMAGE_REPOSITORY}:sha-${BUILD_SHA}-run-${GITHUB_RUN_ID}-a${GITHUB_RUN_ATTEMPT}"
+          # No host deployment secrets, Docker socket mounts or secret build arguments.
+          docker build --pull --platform linux/amd64 \
+            --label "org.opencontainers.image.revision=$BUILD_SHA" \
+            --label "org.opencontainers.image.source=https://github.com/$SOURCE_REPOSITORY" \
+            --label "io.portctl.tree=$TREE_SHA" -t "$tag" .
+          printf '%s' "$PACKAGE_TOKEN" | docker login ghcr.io -u "$REGISTRY_USER" --password-stdin
+          docker push "$tag"
+          image="$(docker image inspect "$tag" --format '{{index .RepoDigests 0}}')"
+          case "$image" in
+            "$IMAGE_REPOSITORY"@sha256:*) ;;
+            *) echo "Unexpected registry digest" >&2; exit 1 ;;
+          esac
+          printf 'image=%s\n' "$image" >> "$GITHUB_OUTPUT"
+          printf '## Built artifact (NOT deployed)\n\n`%s`\n' "$image" >> "$GITHUB_STEP_SUMMARY"
+          docker logout ghcr.io
+
+  operate:
+    needs: [plan, application-tests, build]
+    if: >-
+      always() && !cancelled() && needs.plan.result == 'success' &&
+      (inputs.operation != 'deploy' ||
+      (needs.application-tests.result == 'success' && needs.build.result == 'success'))
+    runs-on: [self-hosted, linux, x64, port-deploy]
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      deployments: write
+    # Optional paid-plan gate: add environment: approval-p4101 etc. dynamically.
+    # The gate is not the actual deployment record; portctl creates one at target_sha.
+    steps:
+      - name: Operate with the pre-installed trusted controller
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PORTCTL_IMAGE: ${{ needs.build.outputs.image }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # NO checkout and NO script from the candidate repository on this host.
+          # GHCR read-only login is provisioned on the host by its administrator.
+          python3 /opt/port-releases/portctl.py --config /etc/port-releases/host.json
